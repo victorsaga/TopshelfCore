@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Topshelf;
 using Topshelf.HostConfigurators;
+using NLog;
 
 namespace ConsoleApp1
 {
@@ -25,10 +26,7 @@ namespace ConsoleApp1
                 host.Run();
             }catch(Exception e)
             {
-                using (StreamWriter sw = new StreamWriter(assemblyFolder + "\\Log\\Error.txt", true))
-                {
-                    sw.WriteLine($"[{DateTime.Now}] {e.Message}\r\n{e.StackTrace}");
-                }
+                LogManager.GetCurrentClassLogger().Error($"[{DateTime.Now}] {e.Message}\r\n{e.StackTrace}");
             }
         }
 
@@ -36,10 +34,8 @@ namespace ConsoleApp1
         {
             x.StartAutomatically();
 
-            x.SetDisplayName(GetSettings().GetValue<string>("DisplayName"));
             x.SetServiceName(GetSettings().GetValue<string>("ServiceName"));
-
-            //x.UseNLog();   //nuget install-package Topshelf.NLog        
+            x.SetDescription(GetSettings().GetValue<string>("ServiceDescription"));
 
             x.EnableServiceRecovery(r =>
             {
@@ -65,13 +61,10 @@ namespace ConsoleApp1
             string msg;
             do
             {
-                //這邊因為是透過topshelf的dll在執行，所以目錄位置就不用另外再給就會是正確的
-                using (StreamWriter writer = new StreamWriter(Program.GetSettings().GetValue<string>("FileName"), true))
-                {
-                    msg = $"***{DateTime.Now}";
-                    Console.WriteLine(msg);
-                    writer.WriteLine(msg);
-                }
+                msg = $"***{DateTime.Now}";
+                Console.WriteLine(msg);
+                LogManager.GetCurrentClassLogger().Info(msg);
+                
                 Thread.Sleep(Program.GetSettings().GetValue<int>("SleepMillisecond"));
             } while (true);
         }
